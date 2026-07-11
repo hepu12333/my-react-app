@@ -1,5 +1,6 @@
+import { TiDelete } from "react-icons/ti";
 
-function ToDoRow1({ todoName, todoDate }) {
+function ToDoRow1({ todoName, todoDate, onDeleteItem }) {
 
   return (
     <div> 
@@ -9,8 +10,9 @@ function ToDoRow1({ todoName, todoDate }) {
           <div className="col-4">{todoDate}</div>
 
           <div className="col-2">
-            <button type="button" className="btn btn-danger kg-button">
-              Delete
+            <button type="button" className="btn btn-danger kg-button"
+            onClick={() => onDeleteItem(todoName)}>
+             <TiDelete />
             </button>
           </div>
         </div>
