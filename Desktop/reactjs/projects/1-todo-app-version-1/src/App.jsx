@@ -1,49 +1,42 @@
-import { Routes, Route, Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 
 // ==========================================
-// 1. HOME PAGE (सर्च बार और Query Params के साथ)
+// 👥 कंपोनेंट 1: USERS LIST PAGE (जहाँ से हम Navigate करेंगे)
 // ==========================================
-const Home = () => {
-  const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const searchQuery = searchParams.get('filter') || ''; // URL से 'filter' की वैल्यू निकाली
+const UsersList = () => {
+  const navigate = useNavigate(); // 💡 स्टेप 1: useNavigate हुक को चालू किया
 
-  const products = [
-    { id: '101', name: 'Laptop', price: '$999', brand: 'Apple' },
-    { id: '102', name: 'Smartphone', price: '$699', brand: 'Samsung' },
-    { id: '103', name: 'Smartwatch', price: '$199', brand: 'Apple' },
+  // मान लेते हैं हमारे पास डेटाबेस से आया हुआ यह 3 यूज़र्स का डेटा है
+  const usersData = [
+    { id: '1', name: 'Amit Kumar', email: 'amit@gmail.com', role: 'Admin' },
+    { id: '2', name: 'Rahul Sharma', email: 'rahul@gmail.com', role: 'Editor' },
+    { id: '3', name: 'Priya Singh', email: 'priya@gmail.com', role: 'Subscriber' },
   ];
 
-  // सर्च इनपुट के हिसाब से प्रोडक्ट्स को फ़िल्टर करना
-  const filteredProducts = products.filter(p => 
-    p.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleUserClick = (user) => {
+    console.log(`जादू शुरू: ${user.name} के बटन पर क्लिक हुआ!`);
+
+    // 🎯 स्टेप 2: बटन क्लिक होने पर हम कोडिंग से URL बदल रहे हैं
+    // हम यूआरएल को बदलते हुए '/user/profile' कर देंगे
+    // और साथ में 'state' के अंदर पूरा का पूरा 'user' ऑब्जेक्ट गुप्त रूप से भेज रहे हैं!
+    navigate('/user/profile', { state: { selectedUser: user } });
+  };
 
   return (
-    <div>
-      <h3>🏬 हमारी दुकान (Products Store)</h3>
+    <div className="card p-4 shadow-sm">
+      <h3 className="text-primary mb-3">👥 कंपनी के कर्मचारी (Users List)</h3>
+      <p className="text-muted">नीचे दिए गए बटन पर क्लिक करते ही ऊपर का URL चेंज हो जाएगा:</p>
       
-      {/* लाइव सर्च बार जो URL को अपडेट करता है */}
-      <input 
-        type="text" 
-        className="form-control mb-3"
-        placeholder="प्रोडक्ट सर्च करें (e.g. Laptop)..." 
-        value={searchQuery}
-        onChange={(e) => setSearchParams({ filter: e.target.value })} // URL में ?filter=value जोड़ता है
-      />
-
       <div className="list-group">
-        {filteredProducts.map(product => (
-          <div key={product.id} className="list-group-item d-flex justify-content-between align-items-center">
-            {product.name} ({product.price})
+        {usersData.map((user) => (
+          <div key={user.id} className="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <strong>{user.name}</strong> <span className="badge bg-secondary ms-2">{user.role}</span>
+            </div>
             
-            {/* 🎯 कॉम्प्लेक्स ट्रिक: useNavigate के जरिए हम यूजर को प्रोडक्ट पेज पर भेज रहे हैं
-                और साथ में 'state' के अंदर पूरा का पूरा प्रोडक्ट ऑब्जेक्ट गुप्त रूप से ट्रांसफर कर रहे हैं */}
-            <button 
-              className="btn btn-sm btn-primary"
-              onClick={() => navigate(`/product/${product.id}`, { state: { item: product } })}
-            >
-              Details देखें ➡️
+            {/* बटन क्लिक होने पर हमारा handleUserClick फंक्शन चलेगा */}
+            <button className="btn btn-sm btn-primary" onClick={() => handleUserClick(user)}>
+              प्रोफ़ाइल देखें (URL बदलें) ➡️
             </button>
           </div>
         ))}
@@ -53,35 +46,33 @@ const Home = () => {
 };
 
 // ==========================================
-// 2. DYNAMIC PRODUCT DETAILS PAGE (`:id` के साथ)
+// 🖼️ कंपोनेंट 2: USER PROFILE PAGE (जहाँ डेटा रिसीव होगा)
 // ==========================================
-import { useLocation } from 'react-router-dom';
+const UserProfile = () => {
+  // 💡 स्टेप 3: useLocation हुक की मदद से हम पिछले पेज से भेजा गया 'state' (गुप्त डेटा) यहाँ पकड़ रहे हैं
+  const location = useLocation();
+  const userData = location.state?.selectedUser; // डेटा को सुरक्षित निकाला
 
-const ProductDetails = () => {
-  // useParams() यूआरएल से डायनामिक आईडी निकालता है (जैसे /product/101 में से '101')
-  const { id } = useParams(); 
-  
-  // useLocation() की मदद से हम होम पेज से भेजा गया 'state' (गुप्त डेटा) यहाँ रिसीव कर रहे हैं
-  const location = useLocation(); 
-  const productData = location.state?.item;
-
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // वापस जाने के लिए
 
   return (
-    <div className="card p-4 mt-3 border-primary">
-      <h3>📦 प्रोडक्ट डिटेल्स (Dynamic ID: {id})</h3>
+    <div className="card p-4 shadow border-success animate__animated animate__fadeIn">
+      <h3 className="text-success mb-3">🖼️ कर्मचारी प्रोफ़ाइल (User Profile)</h3>
       
-      {productData ? (
-        <div className="mt-3">
-          <p><strong>नाम:</strong> {productData.name}</p>
-          <p><strong>कीमत:</strong> {productData.price}</p>
-          <p><strong>ब्रांड:</strong> {productData.brand}</p>
+      {/* अगर डेटा मिल गया, तो स्क्रीन पर दिखाओ */}
+      {userData ? (
+        <div className="bg-light p-3 rounded">
+          <p><strong>आईडी (ID):</strong> {userData.id}</p>
+          <p><strong>पूरा नाम:</strong> {userData.name}</p>
+          <p><strong>ईमेल एड्रेस:</strong> {userData.email}</p>
+          <p><strong>रोल (Role):</strong> {userData.role}</p>
         </div>
       ) : (
-        <p className="text-danger">कोई डेटा नहीं मिला! कृपया सीधे लिंक से न आएं।</p>
+        // अगर कोई यूजर सीधे URL टाइप करके आ जाए (बिना बटन क्लिक किए), तो उसे यह एरर दिखेगी
+        <p className="text-danger">⚠️ कोई डेटा नहीं मिला! कृपया होम पेज से बटन दबाकर आएं।</p>
       )}
 
-      {/* कोडिंग के जरिए वापस होम पेज पर भेजना */}
+      {/* 🚀 शॉर्टकट: navigate(-1) लिखने से यूजर ठीक पिछले पेज पर वापस लौट जाता है */}
       <button className="btn btn-secondary mt-3" onClick={() => navigate(-1)}>
         ⬅️ पीछे जाएँ (Go Back)
       </button>
@@ -90,39 +81,24 @@ const ProductDetails = () => {
 };
 
 // ==========================================
-// 3. 404 NOT FOUND PAGE (गलत यूआरएल के लिए)
-// ==========================================
-const NotFound = () => {
-  return (
-    <div className="text-center mt-5 text-danger">
-      <h1>⚠️ 404 Error</h1>
-      <h3>ओह! आप गलत रास्ते पर आ गए हैं। यह पेज मौजूद नहीं है।</h3>
-      <Link to="/" className="btn btn-dark mt-3">वापस होम पेज पर जाएँ</Link>
-    </div>
-  );
-};
-
-// ==========================================
-// 4. MAIN APP COMPONENT
+// 🗺️ मुख्य कंपोनेंट 3: APP ROUTING SETUP
 // ==========================================
 function App() {
   return (
-    <div className="container mt-4" style={{ maxWidth: '600px' }}>
+    <div className="container mt-5" style={{ maxWidth: '600px', fontFamily: 'sans-serif' }}>
       <div className="text-center mb-4">
-        <h2>🛠️ एडवांस्ड रिएक्ट राउटर डैशबोर्ड</h2>
-        <Link to="/" className="btn btn-sm btn-link">Home (Store)</Link>
+        <h2>🛠️ useNavigate() का लाइव वर्किंग मॉडल</h2>
+        <small className="text-muted">नीचे दिए गए बॉक्स को ध्यान से देखें</small>
       </div>
       <hr />
 
+      {/* रास्तों का बक्सा */}
       <Routes>
-        {/* साधारण रूट */}
-        <Route path="/" element={<Home />} />
+        {/* डिफ़ॉल्ट रूप से पहले यूज़र्स की लिस्ट दिखेगी */}
+        <Route path="/" element={<UsersList />} />
         
-        {/* 🛣️ डायनामिक रूट: ':id' का मतलब है यहाँ कुछ भी नंबर या टेक्स्ट आ सकता है */}
-        <Route path="/product/:id" element={<ProductDetails />} />
-        
-        {/* 🚨 404 रूट: path="*" का मतलब है ऊपर वालों के अलावा कोई भी गलत यूआरएल */}
-        <Route path="*" element={<NotFound />} />
+        {/* जब यूआरएल '/user/profile' होगा, तो प्रोफ़ाइल कंपोनेंट दिखेगा */}
+        <Route path="/user/profile" element={<UserProfile />} />
       </Routes>
     </div>
   );
