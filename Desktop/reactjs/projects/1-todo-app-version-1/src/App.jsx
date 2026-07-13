@@ -1,6 +1,6 @@
 import AppName from "./component/AppName";
 import AddToDo from "./component/AddToDo";
-import TodoItems from "./component/TodoItemsTemp";
+import TodoItems from "./component/TodoItems";
 import { useState } from "react";
 import "./App.css";
 function App() {
